@@ -9,7 +9,7 @@ import (
 type User struct {
 	Username string   `json:"username"`
 	RSSSubs  []RSSSub `json:"rss_subs"`
-	RSS      []*RSS   `json:"rss_info_list"`
+	RSSList  []RSS    `json:"rss_info_list"`
 }
 
 // RSSSub list
@@ -20,9 +20,9 @@ type RSSSub struct {
 
 // RSS struct
 type RSS struct {
-	LastFetchTime string   `json:"last_fetch_time"`
-	FetchURL      string   `json:"fetch_url"`
-	RSSInfo       *RSSInfo `json:"rss_info"`
+	LastFetchTime string  `json:"last_fetch_time"`
+	FetchName     string  `json:"fetch_name"`
+	RSSInfo       RSSInfo `json:"rss_info"`
 }
 
 // RSSInfo xml

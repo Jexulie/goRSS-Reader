@@ -17,20 +17,19 @@ func GetRss(url string) []byte {
 }
 
 // UnpackRss to struct
-func UnpackRss(data []byte) *RSSInfo {
-	var newRSSInfo RSSInfo
-	xml.Unmarshal(data, newRSSInfo)
-	return &newRSSInfo
+func UnpackRss(data []byte, info *RSSInfo) {
+	xml.Unmarshal(data, info)
+	// ! problem starts after here
 }
 
 // RecieveRSS rss giver
-func RecieveRSS(info *RSSInfo, url string) *RSS {
-	var newRSS RSS
-	newRSS.LastFetchTime = GetTimeNow()
-	newRSS.FetchURL = url
-	newRSS.RSSInfo = info
-	return &newRSS
+func RecieveRSS(info RSSInfo, rss *RSS, fetch string) {
+	rss.LastFetchTime = GetTimeNow()
+	rss.FetchName = fetch
+	rss.RSSInfo = info
 }
+
+// https://golang.org/pkg/encoding/json/#RawMessage
 
 // func main() {
 // 	news := "http://www.milliyet.com.tr/rss/rssNew/SonDakikaRss.xml"

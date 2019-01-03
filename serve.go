@@ -27,10 +27,16 @@ type JSONResp struct {
 var user User
 
 // Rss Feed Checker
-func checkRSSFeed(user *User) bool {
-	return true
+func checkRSSFeed(user *User, fetch string) bool {
+	for _, v := range user.RSSList {
+		if v.FetchName == fetch {
+			return true
+		}
+	}
+	return false
 }
 
+// Rss Address Add
 func addRSS(user *User, req JSONReq) {
 	// add to subs
 	newSub := RSSSub{
@@ -40,33 +46,37 @@ func addRSS(user *User, req JSONReq) {
 	user.RSSSubs = append(user.RSSSubs, newSub)
 }
 
+// Username add/change
 func addName(user *User, name string) {
 	user.Username = name
 }
 
+// Get All RSS data
 func getUrls(user *User) {
-	// check if rss feed already exists
+	// todo check if rss feed already exists
 	for _, v := range user.RSSSubs {
+		var newInfo RSSInfo
+		var newRSS RSS
 		raw := GetRss(v.RSSURL)
-		rssInfo := UnpackRss(raw)
-		// fmt.Println(rssInfo)
-		rssData := RecieveRSS(rssInfo, v.RSSURL)
-		// fmt.Println(rssData)
-		user.RSS = append(user.RSS, rssData)
-		// ! Memory Problem
-		fmt.Println(rssData.RSSInfo)
+		UnpackRss(raw, &newInfo)
+		RecieveRSS(newInfo, &newRSS, v.RSSname)
+		user.RSSList = append(user.RSSList, newRSS)
 	}
 }
 
+// Get One RSS data // ! refresh maybe
 func getUrl(user *User, name string) {
-	// check if rss feed already exists
+	// ! set RSSList to empty array
+	user.RSSList = nil
+	// todo check if rss feed already exists
 	for _, v := range user.RSSSubs {
 		if v.RSSname == name {
+			var newInfo RSSInfo
+			var newRSS RSS
 			raw := GetRss(v.RSSURL)
-			rssInfo := UnpackRss(raw)
-			rssData := RecieveRSS(rssInfo, v.RSSURL)
-			// ! Memory Problem
-			user.RSS = append(user.RSS, rssData)
+			UnpackRss(raw, &newInfo)
+			RecieveRSS(newInfo, &newRSS, v.RSSname)
+			user.RSSList = append(user.RSSList, newRSS)
 		}
 	}
 }
@@ -79,6 +89,9 @@ func response(success bool, msg string, w http.ResponseWriter) {
 		Time:    time.Now().String(),
 	}
 	jsonize, _ := json.Marshal(resp)
+	// ! General app/json headers
+	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Accept-Charset", "utf-8,Windows-1252")
 	fmt.Fprintln(w, string(jsonize))
 }
 
@@ -91,7 +104,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 // AddUserHandler getter
 func AddUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		// addUser?name=john
+		//* addUser?name=john
 		name, ok := r.URL.Query()["name"]
 		if !ok || len(name) < 1 {
 			response(false, "No Parameters Provided ...", w)
@@ -100,7 +113,7 @@ func AddUserHandler(w http.ResponseWriter, r *http.Request) {
 		addName(&user, name[0])
 
 		response(true, "Username Added/Changed ...", w)
-		fmt.Printf("%+v \n", user)
+		// fmt.Printf("%+v \n", user)
 		return
 	}
 	response(false, "Wrong End Point", w)
@@ -120,7 +133,7 @@ func AdderHandler(w http.ResponseWriter, r *http.Request) {
 		addRSS(&user, req)
 
 		response(true, "RSS Address Added ...", w)
-		log.Printf("%+v \n", user)
+		// log.Printf("%+v \n", user)
 		return
 	}
 	response(false, "Wrong End Point", w)
@@ -136,8 +149,8 @@ func GetterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		getUrl(&user, name[0])
-		// get rss if query is 0 get all
-		res, _ := json.Marshal(user)
+		// todo get rss if query is 0 get all
+		res, _ := json.Marshal(&user)
 		response(true, string(res), w)
 		return
 	}
@@ -150,8 +163,8 @@ func GetterAllHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		getUrls(&user)
 		// log.Printf("%+v \n", user)
-		// res, _ := json.Marshal(user)
-		// response(true, string(res), w)
+		res, _ := json.Marshal(&user)
+		response(true, string(res), w)
 		// get rss if query is 0 get all
 		return
 	}
@@ -180,3 +193,5 @@ func main() {
 	err := server.ListenAndServe()
 	Check(err)
 }
+
+// * json.RawMessage -> new structs for json instead of having one for both
