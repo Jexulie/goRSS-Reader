@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -49,6 +50,8 @@ func AdderHandler(w http.ResponseWriter, r *http.Request) {
 		//* Add to DB
 		AddRssListToDB(user.Username, user.RSSSubs)
 
+		fmt.Printf("%+v \n", user.RSSSubs)
+
 		Response(true, "RSS Address Added ...", w)
 		// log.Printf("%+v \n", user)
 		return
@@ -60,12 +63,21 @@ func AdderHandler(w http.ResponseWriter, r *http.Request) {
 // GetterHandler getter - Get One Rss
 func GetterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		//! gets username and checks db
 		name, ok := r.URL.Query()["name"]
 		if !ok || len(name) < 1 {
-			Response(false, "No Parameters Provided ...", w)
+			Response(false, "No Name Parameter Provided ...", w)
 			return
 		}
+
+		username, ok := r.URL.Query()["username"]
+		if !ok || len(username) < 1 {
+			Response(false, "No Username Parameter Provided ...", w)
+			return
+		}
+		user.Username = username[0]
 		GetURL(&user, user, name[0])
+		AddRssInfoToDB(username[0], user.RSSList)
 		res, _ := json.Marshal(&user)
 		Response(true, string(res), w)
 		return
@@ -77,7 +89,16 @@ func GetterHandler(w http.ResponseWriter, r *http.Request) {
 // GetterAllHandler getter - Get All Rss
 func GetterAllHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		//! gets username and checks db
+		username, ok := r.URL.Query()["username"]
+		if !ok || len(username) < 1 {
+			Response(false, "No Username Parameter Provided ...", w)
+			return
+		}
+		user.RSSSubs = GetRssSubsFromDB(username[0])
+		user.RSSList = GetRssInfoFromDB(username[0])
 		GetURLs(&user)
+		AddRssInfoToDB(username[0], user.RSSList)
 		// log.Printf("%+v \n", user)
 		res, _ := json.Marshal(&user)
 		Response(true, string(res), w)
@@ -87,3 +108,5 @@ func GetterAllHandler(w http.ResponseWriter, r *http.Request) {
 	Response(false, "Wrong End Point", w)
 	return
 }
+
+// TODO Add user system
