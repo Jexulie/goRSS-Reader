@@ -21,7 +21,10 @@ func AddUserHandler(w http.ResponseWriter, r *http.Request) {
 			Response(false, "No Parameters Provided ...", w)
 			return
 		}
+		//* Add RSS
 		AddName(&user, name[0])
+		//* Add to DB
+		AddUserToDB(name[0])
 
 		Response(true, "Username Added/Changed ...", w)
 		// fmt.Printf("%+v \n", user)
@@ -41,7 +44,10 @@ func AdderHandler(w http.ResponseWriter, r *http.Request) {
 		var req JSONReq
 		err = json.Unmarshal(bBody, &req)
 		Check(err)
+		//* Add RSS
 		AddRSS(&user, req)
+		//* Add to DB
+		AddRssListToDB(user.Username, user.RSSSubs)
 
 		Response(true, "RSS Address Added ...", w)
 		// log.Printf("%+v \n", user)
