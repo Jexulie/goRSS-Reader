@@ -5,6 +5,19 @@ import (
 	"time"
 )
 
+// JSONReq request for rss reg
+type JSONReq struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+// JSONResp general response
+type JSONResp struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Time    string `json:"time"`
+}
+
 // User server
 type User struct {
 	Username string   `json:"username"`
